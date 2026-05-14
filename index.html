@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背單字網站</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">英文單字學習</h1>
+        <div class="card-container">
+            <div class="card" id="card">
+                <div class="card-front">
+                    <h2 id="word">單字</h2>
+                </div>
+                <div class="card-back">
+                    <h3 id="translation">翻譯</h3>
+                    <p><strong>詞性：</strong><span id="partOfSpeech">詞性</span></p>
+                    <p><strong>例句：</strong><span id="example">例句</span></p>
+                    <p><strong>字根分析：</strong><span id="rootAnalysis">字根分析</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="prevBtn">上一頁</button>
+            <span id="currentIndex">1</span> / <span id="totalWords">10</span>
+            <button id="nextBtn">下一頁</button>
+        </div>
+        <div class="flip-controls">
+            <button id="flipBtn">翻轉卡片</button>
+        </div>
+        <a href="admin.html" class="admin-link">管理單字</a>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
