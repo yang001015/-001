@@ -31,7 +31,13 @@
                 <textarea id="rootAnalysis" required></textarea>
             </div>
             <button type="submit" class="submit-btn">新增單字</button>
+            <button type="button" id="searchButton" class="submit-btn secondary">搜尋相關內容</button>
         </form>
+        <div class="search-panel">
+            <h2>搜尋結果</h2>
+            <p id="searchStatus">請輸入單字後，按「搜尋相關內容」。</p>
+            <div id="searchResults" class="words-list"></div>
+        </div>
         <a href="index.html" class="back-link">返回學習頁面</a>
     </div>
     <script src="admin.js"></script>

@@ -236,3 +236,46 @@ body {
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
     transform: scale(1.05);
 }
+
+.secondary {
+    background: linear-gradient(145deg, #4169e1, #1e90ff);
+    margin-top: 10px;
+}
+
+.search-panel {
+    margin-top: 30px;
+    text-align: left;
+    padding: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-panel h2 {
+    margin-top: 0;
+    color: #fff;
+}
+
+.search-panel p {
+    color: #eee;
+    margin-bottom: 10px;
+}
+
+.words-list {
+    display: grid;
+    gap: 12px;
+}
+
+.word-card {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 14px;
+    color: #fff;
+    text-align: left;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+}
+
+.word-card strong {
+    font-size: 1.3em;
+}
