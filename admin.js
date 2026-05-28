@@ -4,34 +4,70 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchButton = document.getElementById('searchButton');
     const searchResults = document.getElementById('searchResults');
     const searchStatus = document.getElementById('searchStatus');
-    const apiOrigin = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
 
-    function renderResults(items, query) {
-        if (!items.length) {
-            searchStatus.textContent = '找不到相關內容。';
+    const rootMap = {
+        abundant: 'abund = plenty (大量)',
+        benevolent: 'bene = good, vol = will (仁慈)',
+        courageous: 'cour = heart (勇敢)',
+        diligent: 'dili / dilig = careful (勤奮)',
+        eloquent: 'eloqu = speak (雄辯)',
+        fortunate: 'fortun = luck (幸運)',
+        generous: 'gener = kind (慷慨)',
+        harmonious: 'harm = join (和諧)',
+        industrious: 'industr = work/skill (勤勞)',
+        jubilant: 'jubil = shout (歡樂)'
+    };
+
+    function renderResult(result) {
+        if (!result || !result.word) {
+            searchStatus.textContent = '查無相關結果，請確認單字拼字是否正確。';
             searchResults.innerHTML = '';
             return;
         }
 
-        searchStatus.textContent = `找到 ${items.length} 筆相關內容。`;
-        searchResults.innerHTML = items.map(item => {
-            return `
-                <div class="word-card">
-                    <strong>${item.word}</strong> (${item.partOfSpeech || '未填'})<br>
-                    翻譯：${item.translation || '無'}<br>
-                    例句：${item.example || '無'}<br>
-                    字根分析：${item.rootAnalysis || '無'}
-                </div>
-            `;
-        }).join('');
+        searchStatus.textContent = '已取得外部字典結果。';
+        searchResults.innerHTML = `
+            <div class="word-card">
+                <strong>${result.word}</strong> (${result.partOfSpeech || '未填'})<br>
+                翻譯：${result.translation || '無'}<br>
+                例句：${result.example || '無'}<br>
+                字根分析：${result.rootAnalysis || '無'}
+            </div>
+        `;
 
-        const exactMatch = items.find(item => item.word.toLowerCase() === query.toLowerCase());
-        if (exactMatch) {
-            document.getElementById('translation').value = exactMatch.translation || '';
-            document.getElementById('partOfSpeech').value = exactMatch.partOfSpeech || '';
-            document.getElementById('example').value = exactMatch.example || '';
-            document.getElementById('rootAnalysis').value = exactMatch.rootAnalysis || '';
+        document.getElementById('translation').value = result.translation || '';
+        document.getElementById('partOfSpeech').value = result.partOfSpeech || '';
+        document.getElementById('example').value = result.example || '';
+        document.getElementById('rootAnalysis').value = result.rootAnalysis || '';
+    }
+
+    async function fetchTranslation(word) {
+        try {
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|zh-TW`);
+            if (!res.ok) return '';
+            const data = await res.json();
+            return data.responseData?.translatedText || '';
+        } catch (err) {
+            console.warn('翻譯 API 失敗：', err);
+            return '';
         }
+    }
+
+    async function fetchDictionary(word) {
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+        if (!res.ok) {
+            throw new Error('外部字典查詢失敗');
+        }
+        const data = await res.json();
+        const entry = Array.isArray(data) ? data[0] : null;
+        const meaning = entry?.meanings?.find(m => m.definitions?.length);
+        const definition = meaning?.definitions?.find(d => d.example) || meaning?.definitions?.[0] || {};
+        return {
+            word: entry?.word || word,
+            partOfSpeech: meaning?.partOfSpeech || '',
+            example: definition.example || definition.definition || '',
+            rootAnalysis: rootMap[word.toLowerCase()] || '此單字目前無字根分析。'
+        };
     }
 
     async function searchWord(query) {
@@ -41,59 +77,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        searchStatus.textContent = 'API 連線中…';
+        searchStatus.textContent = '正在連線到外部字典 API…';
         searchResults.innerHTML = '';
 
         try {
-            const res = await fetch(`${apiOrigin}/api/items?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
-            if (!res.ok) {
-                throw new Error(`API 回傳失敗：${res.status}`);
-            }
-
-            const items = await res.json();
-            renderResults(items, query);
+            const dictResult = await fetchDictionary(query);
+            const translation = await fetchTranslation(query);
+            renderResult({ ...dictResult, translation });
         } catch (error) {
-            console.error('API 查詢失敗：', error);
-            searchStatus.textContent = 'API 無法連線，請確認伺服器已啟動，並於同一頁直接查詢。';
+            console.error('外部字典查詢失敗：', error);
+            searchStatus.textContent = '外部字典查詢失敗，請確認網路是否連線或單字拼寫是否正確。';
             searchResults.innerHTML = '';
         }
     }
 
-    form.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        const newWord = {
-            word: wordInput.value.trim(),
-            translation: document.getElementById('translation').value.trim(),
-            partOfSpeech: document.getElementById('partOfSpeech').value.trim(),
-            example: document.getElementById('example').value.trim(),
-            rootAnalysis: document.getElementById('rootAnalysis').value.trim()
-        };
-
-        if (!newWord.word) {
-            alert('請輸入單字。');
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newWord)
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.error || 'API 新增失敗');
-            }
-
-            form.reset();
-            alert('單字已透過 API 新增！');
-            window.location.href = 'index.html';
-        } catch (err) {
-            console.error('API 新增失敗：', err);
-            alert('API 無法連線，請先啟動伺服器再重新送出。');
-        }
+        searchWord(wordInput.value.trim());
     });
 
     searchButton.addEventListener('click', function() {
